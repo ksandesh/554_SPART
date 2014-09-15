@@ -37,21 +37,21 @@ module brg(
 	
 	assign sampling_clk = rate_enable;
 	// Divisor input load logic
-	always@(negedge clk)		// This clock is made to work on negedge because input data will be changing on the posedge
+	always@(posedge clk)		// This clock is made to work on negedge because input data will be changing on the posedge
 	begin
 		if(rst) begin
-			db_low <= 0x02;
-			db_high <= 0x8B;
-			brg_ready <=1'b0;
+			DBH <= 0x02;
+			DBL <= 0x8B;
+			brg_ready <=2'b00;
 		end
 		else begin
 			if(load_high == 1) begin
 				DBH	<= data_in;
-				brg_ready = brg_ready | 2'b01;
+				brg_ready <= brg_ready | 2'b01;
 			end
 			else if(load_low == 1) begin
 				DBL <= data_in;
-				brg_ready = brg_ready | 2'b10;
+				brg_ready <= brg_ready | 2'b10;
 			end
 		end
 	end
@@ -71,15 +71,15 @@ module brg(
 	end	
 	
 	// Divisor rate_enable logic
-	always@(negedge clk) begin
+	always@(posedge clk) begin
 		if(rst) begin
 			rate_enable <= 1'b0;
 		end
-		else if (counter == 0) begin 
-				rate_enable = 1'b1;
+		else if (counter == 1) begin 
+				rate_enable <= 1'b1;
 		end
 		else begin 
-				rate_enable = 1'b0;
+				rate_enable <= 1'b0;
 		end
 	end
 	
