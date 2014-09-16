@@ -21,10 +21,7 @@
 `define DBH4800 8'h05
 `define DBL4800 8'h16
 `define DBH9600 8'h02
-`define DBH9600 8'h05
-`define DBL4800 8'h16
-`define DBH9600 8'h02
-`define DBL9600 8'h8B
+`define DBL9600 8'h8b
 `define DBH19200 8'h01
 `define DBL19200 8'h64
 `define DBH38400 8'h00
@@ -71,7 +68,7 @@ module driver(
 	always@(posedge clk) begin
 		if(rst)
 			data_buffer <= 8'bxxxxxxxx;
-		else
+		else if ((iocs == 1) && (iorw == 1) && (rda == 1)) // Sandesh: Added additional condition to ....
 			data_buffer <= databus;
 	end
 		
