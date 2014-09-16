@@ -65,7 +65,7 @@ brg brg1(
 		);
 
 		
-assign databus = (iorw) ? rx_out : 8'hzzzzzzzz ;
+assign databus = (iorw) ? rx_out : 8'bzzzzzzzz ;
 
 always@(*) begin
 	read = 0;
