@@ -1,11 +1,11 @@
 //////////////////////////////////////////////////////////////////////////////////
-// Company: Team 3
-// Engineer:	Sandesh
+// Company: 		Team 3
+// Engineer:		Sandesh
 // 
-// Create Date: Sept 13, 2014
-// Design Name: Processor
-// Module Name:    driver 
-// Project Name: SPART
+// Create Date: 	Sept 13, 2014
+// Design Name: 	Processor
+// Module Name:  	driver 
+// Project Name: 	SPART
 // Target Devices: 
 // Tool versions: 
 // Description: 
@@ -39,11 +39,33 @@ module driver(
     output [1:0] ioaddr,
     inout [7:0] databus
     );
-
+	
+	parameter CLEAR		= 3'b000;
+	parameter LOAD_DBH	= 3'b001;
+	parameter LOAD_DBL 	= 3'b010;
+	parameter WAIT1 	= 3'b011;
+	parameter READ 		= 3'b100;
+	parameter WAIT2 	= 3'b101;
+	parameter WRITE 	= 3'b110;
+	//parameter CLEAR 	= 3'b110;
+	
 	reg	[ 7:0] 	data;
 	reg			send;	// send data to SPART if send is 1 
 	reg	[ 7:0]	DBH, DBL;
-	
+	reg [ 7:0]  data_buffer;
+	reg [ 2:0]	state, next_state;
+	// Question: Do we really need to check if iocs == 1?
+	assign databus = ((iocs == 1) && (iorw == 0))? data : z ;  	// data = data_buffer when driver is sending data
+												// data = DBH when driver is sending data to DBH
+												// data = DBL when driver is sending data to DBL
+												
+	always@(posedge clk) begin
+		if(rst)
+			data_buffer <= 8'hxx;
+		else
+			data_buffer <= databus;
+	end
+		
 	always@(bfg_cfg) begin
 		case(bfg_cfg) 
 			2'b00:	DBH = DBH4800;	DBL = DBL4800;
@@ -57,6 +79,7 @@ module driver(
 	always@(posedge clk, posedge rst) begin
 		if(rst)
 			state <= CLEAR;
+			send <= 0;
 		else
 			state <= next_state;		
 	end
@@ -67,80 +90,67 @@ module driver(
 		CLEAR:
 			next_state = LOAD_DBH;
 		LOAD_DBH:
-			if (count == 5)
-			next_state = LOAD_DBL;
-			else 
-			next_state = LOAD_DBH;
+			next_state = LOAD_DBL; // Go to the next state after some time
 		LOAD_DBL:
 			next_state = WAIT;	
-		WAIT:
+		WAIT1:
 			if(rda == 1)
 				next_state = READ;
 			else 
-				next_state = WAIT:
-			
+				next_state = WAIT:			
 		READ:
 			if(rda == 1)
-			next_state = READ;
+				next_state = READ;
 			else
-			next_state = WRITE;
-		
+				next_state = WAIT2;
+		WAIT2:
+			if(tbr == 1)
+				next_state = WRITE;
+			else
+				next_state = WAIT2;
 		WRITE:
 			if(tbr == 1)
-				next_state = WAIT;
-			else
 				next_state = WRITE;
-				
+			else
+				next_state = WAIT1;	
 		default:
+				next_state = CLEAR;
 	end
 	
 	always@(state)
 	begin
-	ioaddr = 2'b00;
-	data = 8'd0;
+	ioaddr = 2'bxx;
+	data = data_buffer;
 	iocs = 1'b0;
-	
+	iorw = 0;			// Sandesh: Should this be 0??? or X
 		case(state)
 			CLEAR:
-				data = 0x00;
-				//count = count + 1;
-				;
+				;		// don't care about output but this shouldn't cause false triggering in SPART
 			LOAD_DBH:
-				//send = 1'b0;
-				count = count + 1;
 				ioaddr = 2'b11;
+				iocs = 1'b1;
+				iorw = 1'b0;
 				data = DBH;
 			LOAD_DBL:
 				ioaddr = 2'b10;
+				iocs = 1'b1;
+				iorw = 1'b0;
 				data = DBL;
-			WAIT:
-				ioaddr = 2'bxx;
-				data = 2'dx;
+			WAIT1:
+				;		// don't care about output but this shouldn't cause false triggering in SPART
 			READ:
 				ioaddr = 2'b00;
-				
-				
+				iocs = 1'b1;
+				iorw = 1'b1;
+			WAIT2:
+				;		// don't care about output but this shouldn't cause false triggering in SPART
 			WRITE:
+				ioaddr = 2'b00;
+				iocs = 1'b1;
+				iorw = 1'b0;
+				data = data_buffer;	
 				//assert write
 			default:
+				;		// don't care about output but this shouldn't cause false triggering in SPART
 	end
-	
-	
-	reg	[ 7:0] data;
-	always@(posedge clk, posedge rst) begin
-		if( rst == 1 ) 
-		begin
-			data <= 0;
-			send <= 0;
-		end
-		
-		
-		
-		if ( rda == 1 ) 			// Wait till first rda is received
-		begin
-			 <= 1;
-		end
-		else 
-	end
-
 endmodule
