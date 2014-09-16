@@ -36,7 +36,6 @@ reg [7:0] rx_out;
 
 RX RX1(
 	.clk(clk),
-	//.rx_enable(rx_enable),
 	.rst(rst),
 	.rda(rda),
 	.rx_out(rx_out),

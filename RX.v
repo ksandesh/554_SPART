@@ -20,13 +20,11 @@
 
 module RX(
 	input clk,
-    input rx_clk,
     input rx_enable,
     input rst,
-    input iocs,
-    input iorw,
-    output reg rx_rda,  
-    output [7:0] rx_out,
+	input read,
+    output reg rda,  
+    output reg [7:0] rx_out,
     input rxd
     );
     
@@ -36,81 +34,91 @@ module RX(
     reg        rx_start;
     reg        rx_sample1;
     reg        rx_sample2;
-    reg [ 3:0] rx_index;                  // rx_cnt 
+    reg [ 3:0] rx_index;                  		// rx_cnt 
     reg [ 3:0] rx_enable_counter;               // rx_sample_cnt is rx_enable_counter;
     reg        rx_error;
     reg        rx_over_run;
    
-    assign rx_out = rx_buffer;    
+     
     
-    always@(posedge rx_clk, posedge rst) begin
+    always@(posedge clk, posedge rst) begin
 		if(rst) begin
 		//	rx_buffer    <= 0;
 			rx_shift_reg <= 0;
-			rx_rda       <= 0;
 			rx_sample1   <= 0;
 			rx_sample2   <= 0;
 			rx_index     <= 0;                  // rx_cnt 
 			rx_enable_counter <= 0;               // rx_sample_cnt is rx_enable_counter;
-			rx_start     <=0;
+			rx_start     <= 0;
 			rx_error     <= 0;
+			rx_out <= 0;
+			rda <= 0;
  		end
-		else begin
-       		// Start bit detection
-			rx_sample1 <= rxd;   // Load input rxd to 
-			rx_sample2 <= rx_sample1;
+		else if(read) begin
+			rx_out <= rx_shift_reg;
+			rda <= 0;
+		end 
+		else if(rx_enable) begin
+		
+			rx_sample1 <= rxd;   		// Load input rxd to 
+			rx_sample2 <= rx_sample1;  	// double flop
           
-			if(rx_enable) begin
-				if( (rx_start == 0) && (rx_sample2 == 0) ) begin
-					rx_start <= 1'b1;
-					rx_enable_counter <= 1;
-					rx_index <= 0;
-				end
+			if( (rx_start == 0) && (rx_sample2 == 0) ) begin  // start bit detected
+				rx_start <= 1'b1;
+				rx_enable_counter <= 1;
+				rx_index <= 0;
+			end
               
-              // Start bit is detected
-				if( rx_start == 1) begin
-					rx_enable_counter <= rx_enable_counter + 1;
+            // Start bit is detected
+			if( rx_start == 1) begin
+				rx_enable_counter <= rx_enable_counter + 1;
                  
-					// Shift data to the right. Assumption LSB is received first
-					if( rx_enable_counter == 7 ) begin
-						
-						if( (rx_index > 0) && (rx_index < 9) ) begin
-						   rx_shift_reg[7:0] <= { rx_sample2, rx_shift_reg[7:1]};
-						end                
-						else if( rx_index == 9) begin
-                        rx_index <= 0;
+				// Shift data to the right. Assumption LSB is received first
+				if( rx_enable_counter == 7 ) begin
+					rx_index <= rx_index + 1;
+					if( (rx_index > 0) && (rx_index < 9) ) begin
+						rx_shift_reg[7:0] <= { rx_sample2, rx_shift_reg[7:1]};
+					end                
+					else if( rx_index == 9) begin
+						rx_index <= 0;
                         rx_start <= 0;
-							if ( rx_sample2 != 1) begin // check if the end of transmit is received without error
-							   rx_rda <= 0;
-							   rx_error <= 1;
-							end
-							else begin
-								rx_rda <= 1;   // data is available for read
-								rx_error <= 0;
-								rx_over_run <= (rx_rda)? 1: 0;
-							end
+						if ( rx_sample2 != 1) begin // check if the end of transmit is received without error
+							rda <= 0;
+							rx_error <= 1;
 						end
-                    end
+						else begin
+							rda <= 1;   // data is available for read
+							rx_error <= 0;
+							rx_over_run <= (rda)? 1: 0;
+						end
+					end
+                end
+					/*
                     else begin
                         rx_index <= rx_index + 1;
                     end
-                     
-                end
-                
-             // put data on the bus when requested by the processor, if rx_enable is not high always, then change the if else end logic.
-/*			
-			if(iorw && iocs) begin
-					rx_buffer <= rx_shift_reg;
-					rx_rda <= 0;
-				end 
+                     */
+            end
+		end
+		
+	end
+	
+endmodule
+
+	/*always@(posedge clk) begin
+		if(rst) begin
+			rx_out <= 0;
+			rda <= 0;
+		end
+		else if(read) begin
+			rx_out <= rx_shift_reg;
+			rx_rda <= 0;
+		end 
+		end	
+	end
 */
-				end // else  end   
-          
-		end // rx_enable
-	end //always
-    
-	always@(negedge clk)  // Change this if you use a variable to complement the clock in the spart module
-	begin
+	/*
+	always@(negedge clk)  begin // Change this if you use a variable to complement the clock in the spart module 
 		if(rst) begin
 			rx_buffer <= 0;
 			rx_rda <= 0;
@@ -120,7 +128,8 @@ module RX(
 					rx_rda <= 0;
 		end 
 	end
-endmodule
+*/
+
 
 
  
