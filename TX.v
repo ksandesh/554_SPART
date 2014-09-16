@@ -41,12 +41,12 @@ module TX(
 			end
 		else if(tx_enable)
 			begin
-			if(write) // 
+			if( write && tbr) // 
 				begin
 				tx_buffer <= tx_in;
 				tbr <= 0;
 				end
-			else if(!tbr)
+			else if(tbr==0)
 				begin
 				if        (count == 4'd0)     begin count <= count+1; txd <= 1'b0        ; end  //start bit
 				else if   (count == 4'd1)     begin count <= count+1; txd <= tx_buffer[0]; end
@@ -58,7 +58,7 @@ module TX(
 				else if   (count == 4'd7)     begin count <= count+1; txd <= tx_buffer[6]; end
 				else if   (count == 4'd8)     begin count <= count+1; txd <= tx_buffer[7]; end
 				else /*if (count == 4'd9)*/   begin count <= 0      ; txd <= 1'b1        ; tbr <= 1; end // stop bit			
-				end
+				end 
 			else
 				begin
 				count <= 0;
@@ -70,6 +70,44 @@ module TX(
 				
 	end
 endmodule
+
+module tb_TX;
+
+	reg clk;
+    reg tx_enable;
+    reg rst;
+	reg write;
+    wire txd;
+    reg [7:0] tx_in;
+    wire tbr;
+	
+	TX TX0(clk,tx_enable,rst,write,txd,tx_in,tbr);
+	
+	initial begin
+	clk = 0;
+	rst = 1;
+	tx_enable = 0;
+	write = 0;
+	end
+	
+	always  #5  clk = ~ clk ;
+	
+	always  begin
+	#300 tx_enable = 1;
+	#10 tx_enable = 0; 
+	end
+	
+	initial begin
+	#100 write = 1; tx_in = 8'b00100010;
+	end
+	
+	initial begin
+	# 22 rst = 1'b0; //disabling reset  
+	end
+
+endmodule
+
+
 /*
 module TX(
     input clk,
