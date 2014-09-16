@@ -23,17 +23,16 @@
 module brg(
     input clk,				// Same as main clock
     input rst,				
-    input load_low;			// Load the DBL on next falling edge of clk
-	input load_high;		// Load the DBH on next falling edge of clk
+    input load_low,		// Load the DBL on next falling edge of clk
+	input load_high,		// Load the DBH on next falling edge of clk
 	input [7:0]data_in,		// There can be output reg, but can there be input reg?
     //output reg brg_ready,	// Indicates if the rate_enable sigle is valid or not
-	output rate_enable	// Sampling clock used by receiver (2^n times baud rate)
+	output tx_enable, rx_enable
     );
     
 	reg	[ 1:0] brg_ready;		// Variable to indicate when the brg is ready to generate the rate_enable
 	reg	[ 7:0] DBH, DBL;
-	reg	[ 15:0] counter; 		// down counter to generate rate_enable
-	//reg	rate_enable;
+	reg	[ 15:0] counter_tx, counter_rx; 		// down counter to generate rate_enable
 	reg [15:0] tx_clk_period;
 	reg [15:0] rx_clk_period;
 	
@@ -42,8 +41,8 @@ module brg(
 	always@(posedge clk)		// This clock is made to work on negedge because input data will be changing on the posedge
 	begin
 		if(rst) begin
-			DBH <= 0x02;
-			DBL <= 0x8B;
+			DBH <= 8'h02;
+			DBL <= 8'h8B;
 			brg_ready <=2'b00;
 		end
 		else begin
@@ -124,11 +123,12 @@ module brg(
 					if (counter_rx == 0)
 						counter_rx <= rx_clk_period;  // counter_rx = counter_tx/16  the {DBH,DBL value is shifted right by 4 places.}
 					else
-						counter_rx <= counter -1;
+						counter_rx <= counter_rx -1;
 				end		
 			end
 	end
 	
-	assign tx_enable = (counter == {DBH,DBL});
+	assign tx_enable = (counter_tx == tx_clk_period);
+	assign rx_enable = (counter_rx == rx_clk_period);
 	
 endmodule
