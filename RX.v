@@ -44,9 +44,9 @@ module RX(
     always@(posedge clk, posedge rst) begin
 		if(rst) begin
 		//	rx_buffer    <= 0;
-			rx_shift_reg <= 0;
-			rx_sample1   <= 0;
-			rx_sample2   <= 0;
+			rx_shift_reg <= 8'b11111111;
+			rx_sample1   <= 1;
+			rx_sample2   <= 1;
 			rx_index     <= 0;                  // rx_cnt 
 			rx_enable_counter <= 0;               // rx_sample_cnt is rx_enable_counter;
 			rx_start     <= 0;
@@ -105,30 +105,54 @@ module RX(
 	
 endmodule
 
-	/*always@(posedge clk) begin
-		if(rst) begin
-			rx_out <= 0;
-			rda <= 0;
-		end
-		else if(read) begin
-			rx_out <= rx_shift_reg;
-			rx_rda <= 0;
-		end 
-		end	
+module RX_tb ();
+	reg clk;
+    reg rx_enable;
+    reg rst;
+	reg read;
+    wire rda;  
+    wire [7:0] rx_out;
+    reg rxd;
+	
+	RX RX0 (clk, rx_enable, rst, read, rda, rx_out, rxd);
+	
+	initial begin
+	clk = 0;
+	rx_enable = 0;
+	rst = 1;
+	rxd = 1;
+	read = 0;
 	end
-*/
-	/*
-	always@(negedge clk)  begin // Change this if you use a variable to complement the clock in the spart module 
-		if(rst) begin
-			rx_buffer <= 0;
-			rx_rda <= 0;
-		end
-		if(iorw && iocs) begin
-					rx_buffer <= rx_shift_reg;
-					rx_rda <= 0;
-		end 
+	
+	always 
+	#5 clk = ~clk;
+	
+	always begin  // baudrate is default.
+	#390 rx_enable = 1;
+	#10  rx_enable = 0;
 	end
-*/
+	
+	initial begin
+	#22  rst = 0;
+	#6400 rxd = 0; // start bit
+	#6400 rxd = 0;
+	#6400 rxd = 0;
+	#6400 rxd = 1;
+	#6400 rxd = 0;
+	#6400 rxd = 0;
+	#6400 rxd = 0;
+	#6400 rxd = 1;
+	#6400 rxd = 0;
+	#6400 rxd = 1; // stop
+	#6500 read = 1;
+	
+	end
+	
+	
+	
+	
+	
+endmodule
 
 
 
