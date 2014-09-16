@@ -68,11 +68,13 @@ always@(*) begin
 	load_low = 0;
 	load_high = 0;
 		case({ioaddr,iocs,iorw})
-			1110:	// load high
-			1010:
-			0010:
-			0011:
-			default: 
-				;
+			1110: load_high = 1;	
+			1010: load_low = 1;
+			0010: read = 1;
+			0011: write = 1;
+			default:  ;
 		endcase
+end
+
+
 endmodule
