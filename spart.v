@@ -32,7 +32,7 @@ module spart(
     );
 	
 reg read, write, load_high, load_low;
-reg [7:0] rx_out;
+wire [7:0] rx_out;
 
 RX RX1(
 	.clk(clk),

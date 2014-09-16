@@ -158,6 +158,7 @@ initial begin
 #7 rst = 0;
 #40 load_high = 1 ; load_low=0; data_in = 8'h02;
 #10 load_low= 1; load_high = 0; data_in = 8'h8b; 
+#10 load_low = 0; load_high = 0; data_in = 8'b0;
 #100000 $stop;
 end
 endmodule
