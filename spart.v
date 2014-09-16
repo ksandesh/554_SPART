@@ -31,7 +31,7 @@ module spart(
     input rxd
     );
 	
-reg read, write, load_dbh, load_dbl;
+reg read, write, load_high, load_low;
 reg [7:0] rx_out;
 
 RX RX1(
@@ -66,7 +66,7 @@ brg brg1(
 		);
 
 		
-assign databus = (iorw) ? rx_out : z ;
+assign databus = (iorw) ? rx_out : 8'hzzzzzzzz ;
 
 always@(*) begin
 	read = 0;
