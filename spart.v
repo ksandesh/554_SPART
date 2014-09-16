@@ -32,15 +32,17 @@ module spart(
     );
 	
 reg read, write, load_dbh, load_dbl;
-	
+reg [7:0] rx_out;
+
 RX RX1(
 	.clk(clk),
 	//.rx_enable(rx_enable),
 	.rst(rst),
 	.rda(rda),
-	.rx_out(databus),
+	.rx_out(rx_out),
 	.rxd(rxd),
-	.read(read)
+	.read(read),
+	.rx_enable(rx_enable)
         );
 
 TX TX1(
@@ -49,7 +51,8 @@ TX TX1(
 	.txd(txd),
 	.tx_in(databus),
 	.tbr(tbr),
-	.write(write)
+	.write(write),
+	.tx_enable(tx_enable)
         );
 	
 brg brg1(
@@ -58,9 +61,12 @@ brg brg1(
     .load_low(load_low),			
 	.load_high(load_high),		
 	.data_in(databus),		
-	.rate_enable(rate_enable)
+	.rx_enable(rx_enable),
+	.tx_enable(tx_enable)
 		);
 
+		
+assign databus = (iorw) ? rx_out : z ;
 
 always@(*) begin
 	read = 0;
