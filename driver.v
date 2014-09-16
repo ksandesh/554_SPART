@@ -18,25 +18,28 @@
 //
 //////////////////////////////////////////////////////////////////////////////////
 
-`define DBH4800 0x05
-`define DBL4800 0x16
-`define DBH9600 0x02
-`define DBH9600 0x8B
-`define DBH19200 0x01
-`define DBL19200 0x64
-`define DBH38400 0x00
-`define DBH38400 0xA3
+`define DBH4800 8'h05
+`define DBL4800 8'h16
+`define DBH9600 8'h02
+`define DBH9600 8'h05
+`define DBL4800 8'h16
+`define DBH9600 8'h02
+`define DBL9600 8'h8B
+`define DBH19200 8'h01
+`define DBL19200 8'h64
+`define DBH38400 8'h00
+`define DBL38400 8'hA3
 
 
 module driver(
     input clk,
     input rst,
     input [1:0] br_cfg,
-    output iocs,
-    output iorw,
+    output reg iocs,
+    output reg iorw,
     input rda,
     input tbr,
-    output [1:0] ioaddr,
+    output reg[1:0] ioaddr,
     inout [7:0] databus
     );
 	
@@ -49,37 +52,42 @@ module driver(
 	parameter WRITE 	= 3'b110;
 	//parameter CLEAR 	= 3'b110;
 	
+	reg			iocs_reg,iorw_reg;
+	reg	[ 1:0]	ioaddr_reg;
 	reg	[ 7:0] 	data;
 	reg			send;	// send data to SPART if send is 1 
 	reg	[ 7:0]	DBH, DBL;
 	reg [ 7:0]  data_buffer;
 	reg [ 2:0]	state, next_state;
 	// Question: Do we really need to check if iocs == 1?
-	assign databus = ((iocs == 1) && (iorw == 0))? data : z ;  	// data = data_buffer when driver is sending data
+	assign databus = ((iocs == 1) && (iorw == 0))? data : 8'bzzzzzzzz ;  	// data = data_buffer when driver is sending data
 												// data = DBH when driver is sending data to DBH
 												// data = DBL when driver is sending data to DBL
-												
+	//assign iocs 	= iocs_reg;
+	//assign iorw 	= iorw_reg;
+	//assign ioaddr 	= ioaddr_reg;
+	
+	
 	always@(posedge clk) begin
 		if(rst)
-			data_buffer <= 8'hxx;
+			data_buffer <= 8'bxxxxxxxx;
 		else
 			data_buffer <= databus;
 	end
 		
-	always@(bfg_cfg) begin
-		case(bfg_cfg) 
-			2'b00:	DBH = DBH4800;	DBL = DBL4800;
-			2'b01:	DBH = DBH9600;	DBL = DBL9600;
-			2'b10:	DBH = DBH19200;	DBL = DBL19200;
-			2'b11:	DBH = DBH38400;	DBL = DBL38400;
-			default:DBH = DBH9600;	DBL = DBL9600;
+	always@(br_cfg) begin
+		case(br_cfg) 
+			2'b00:	begin   DBH = `DBH4800;		DBL = `DBL4800;	end
+			2'b01:	begin	DBH = `DBH9600;		DBL = `DBL9600;	end	
+			2'b10:	begin	DBH = `DBH19200;	DBL = `DBL19200;	end
+			2'b11:	begin	DBH = `DBH38400;	DBL = `DBL38400;	end
+			default:begin	DBH = `DBH9600;		DBL = `DBL9600;	end
 		endcase
 	end
 	
 	always@(posedge clk, posedge rst) begin
 		if(rst)
 			state <= CLEAR;
-			send <= 0;
 		else
 			state <= next_state;		
 	end
@@ -92,12 +100,12 @@ module driver(
 		LOAD_DBH:
 			next_state = LOAD_DBL; // Go to the next state after some time
 		LOAD_DBL:
-			next_state = WAIT;	
+			next_state = WAIT1;	
 		WAIT1:
 			if(rda == 1)
 				next_state = READ;
 			else 
-				next_state = WAIT:			
+				next_state = WAIT1;			
 		READ:
 			if(rda == 1)
 				next_state = READ;
@@ -115,11 +123,12 @@ module driver(
 				next_state = WAIT1;	
 		default:
 				next_state = CLEAR;
+		endcase
 	end
 	
 	always@(state)
 	begin
-	ioaddr = 2'bxx;
+	ioaddr = 2'bxx;         // This wont work if ioaddr is an output, It must be a reg
 	data = data_buffer;
 	iocs = 1'b0;
 	iorw = 0;			// Sandesh: Should this be 0??? or X
@@ -127,30 +136,39 @@ module driver(
 			CLEAR:
 				;		// don't care about output but this shouldn't cause false triggering in SPART
 			LOAD_DBH:
+			   begin
 				ioaddr = 2'b11;
 				iocs = 1'b1;
 				iorw = 1'b0;
 				data = DBH;
+				end
 			LOAD_DBL:
+			   begin
 				ioaddr = 2'b10;
 				iocs = 1'b1;
 				iorw = 1'b0;
 				data = DBL;
+				end
 			WAIT1:
 				;		// don't care about output but this shouldn't cause false triggering in SPART
 			READ:
+			   begin
 				ioaddr = 2'b00;
 				iocs = 1'b1;
 				iorw = 1'b1;
+				end
 			WAIT2:
 				;		// don't care about output but this shouldn't cause false triggering in SPART
 			WRITE:
+			   begin
 				ioaddr = 2'b00;
 				iocs = 1'b1;
 				iorw = 1'b0;
 				data = data_buffer;	
+				end
 				//assert write
 			default:
 				;		// don't care about output but this shouldn't cause false triggering in SPART
+		endcase
 	end
 endmodule
