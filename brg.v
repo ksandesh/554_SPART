@@ -34,7 +34,8 @@ module brg(
 	reg	[ 7:0] DBH, DBL;
 	reg	[ 15:0] counter; 		// down counter to generate rate_enable
 	//reg	rate_enable;
-	
+	reg [15:0] tx_clk_period;
+	reg [15:0] rx_clk_period;
 	
 		
 	// Divisor input load logic
@@ -89,20 +90,45 @@ module brg(
 	begin
 		if(rst) 
 			begin
-			counter <= 16'd0;
+			counter_tx <= 16'd0;
 			end 
 		else
 			begin
 			if( brg_ready == 2'b11 )
 				begin
-					if (counter == 0)
-						counter <= {DBH,DBL};
+					if (counter_tx == 0)
+						counter_tx <= tx_clk_period;
 					else
-						counter <= counter -1;
+						counter_tx <= counter_tx -1;
 				end		
 			end
 	end
 	
-	assign rate_enable = (counter == {DBH,DBL});
+	always@(*)
+	begin
+	tx_clk_period = {DBH,DBL};
+	rx_clk_period = {{4{1'b0}},DBH,DBL[7:4]};
+	end
+	
+	
+	always@(posedge clk, posedge rst) 
+	begin
+		if(rst) 
+			begin
+			counter_rx <= 16'd0;
+			end 
+		else
+			begin
+			if( brg_ready == 2'b11 )
+				begin
+					if (counter_rx == 0)
+						counter_rx <= rx_clk_period;  // counter_rx = counter_tx/16  the {DBH,DBL value is shifted right by 4 places.}
+					else
+						counter_rx <= counter -1;
+				end		
+			end
+	end
+	
+	assign tx_enable = (counter == {DBH,DBL});
 	
 endmodule
