@@ -26,16 +26,17 @@ module brg(
     input load_low;			// Load the DBL on next falling edge of clk
 	input load_high;		// Load the DBH on next falling edge of clk
 	input [7:0]data_in,		// There can be output reg, but can there be input reg?
-    output reg brg_ready,	// Indicates if the rate_enable sigle is valid or not
-	output sampling_clk	// Sampling clock used by receiver (2^n times baud rate)
+    //output reg brg_ready,	// Indicates if the rate_enable sigle is valid or not
+	output rate_enable	// Sampling clock used by receiver (2^n times baud rate)
     );
     
 	reg	[ 1:0] brg_ready;		// Variable to indicate when the brg is ready to generate the rate_enable
 	reg	[ 7:0] DBH, DBL;
 	reg	[ 15:0] counter; 		// down counter to generate rate_enable
-	reg	rate_enable;
+	//reg	rate_enable;
 	
-	assign sampling_clk = rate_enable;
+	
+		
 	// Divisor input load logic
 	always@(posedge clk)		// This clock is made to work on negedge because input data will be changing on the posedge
 	begin
@@ -56,6 +57,7 @@ module brg(
 		end
 	end
 	
+	/*
 	// Divisor counter load logic
 	always@(posedge clk) begin
 		if(rst) begin
@@ -75,12 +77,32 @@ module brg(
 		if(rst) begin
 			rate_enable <= 1'b0;
 		end
-		else if (counter == 1) begin 
+		else if (counter == 1) begin s
 				rate_enable <= 1'b1;
 		end
 		else begin 
 				rate_enable <= 1'b0;
 		end
 	end
+	*/
+	always@(posedge clk, posedge rst) 
+	begin
+		if(rst) 
+			begin
+			counter <= 16'd0;
+			end 
+		else
+			begin
+			if( brg_ready == 2'b11 )
+				begin
+					if (counter == 0)
+						counter <= {DBH,DBL};
+					else
+						counter <= counter -1;
+				end		
+			end
+	end
+	
+	assign rate_enable = (counter == {DBH,DBL});
 	
 endmodule

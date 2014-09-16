@@ -58,7 +58,7 @@ brg brg1(
     .load_low(load_low),			
 	.load_high(load_high),		
 	.data_in(databus),		
-	.enable(enable)
+	.rate_enable(rate_enable)
 		);
 
 
