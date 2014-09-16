@@ -73,10 +73,10 @@ always@(*) begin
 	load_low = 0;
 	load_high = 0;
 		case({ioaddr,iocs,iorw})
-			1110: load_high = 1;	
-			1010: load_low = 1;
-			0010: read = 1;
-			0011: write = 1;
+		4'b1110: load_high = 1;	
+		4'b1010: load_low = 1;
+		4'b0010: write = 1;
+		4'b0011: read = 1;
 			default:  ;
 		endcase
 end
