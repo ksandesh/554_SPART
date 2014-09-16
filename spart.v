@@ -61,24 +61,18 @@ brg brg1(
 	.enable(enable)
 		);
 
-always@(*) 
-	begin
-	case(ioaddr)
-	00: begin
-		if(iocs && iorw)
-			read = 1;
-		else if(iocs && !iorw)
-			write = 1;
-		end
-		
-	10: begin
-		load_low = 1;
-		end
-		
-	11: begin
-		load_high = 1;
-		end
-	endcase
-	end
-		
+
+always@(*) begin
+	read = 0;
+	write = 0;
+	load_low = 0;
+	load_high = 0;
+		case({ioaddr,iocs,iorw})
+			1110:	// load high
+			1010:
+			0010:
+			0011:
+			default: 
+				;
+		endcase
 endmodule
