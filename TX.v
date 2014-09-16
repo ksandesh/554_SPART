@@ -99,6 +99,7 @@ module tb_TX;
 	
 	initial begin
 	#100 write = 1; tx_in = 8'b00100010;
+	#400 write = 0; 
 	end
 	
 	initial begin
