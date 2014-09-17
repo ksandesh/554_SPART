@@ -86,15 +86,15 @@ module spart_top_tb ();
 	initial begin
 	rxd = 1;
 	#640 rxd = 0; // start bit
-	#6400 rxd = 1;
-	#6400 rxd = 0;
-	#6400 rxd = 1;
-	#6400 rxd = 0;
-	#6400 rxd = 0;
-	#6400 rxd = 0;
-	#6400 rxd = 1;
-	#6400 rxd = 0;
-	#6400 rxd = 1; // stop
+	#10417 rxd = 1;
+	#10417 rxd = 0;
+	#10417 rxd = 1;
+	#10417 rxd = 0;
+	#10417 rxd = 0;
+	#10417 rxd = 0;
+	#10417 rxd = 1;
+	#10417 rxd = 0;
+	#10417 rxd = 1; // stop
 	
 	end
 endmodule	

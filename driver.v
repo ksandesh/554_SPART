@@ -124,7 +124,7 @@ module driver(
 		endcase
 	end
 	
-	always@(state)
+	always@(*)
 	begin
 	ioaddr = 2'bxx;         // This wont work if ioaddr is an output, It must be a reg
 	data = data_buffer;
