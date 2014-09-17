@@ -3,7 +3,7 @@
 // Company: Team 3
 //////////////////////////////////////////////////////////////////////////////////
 // Company: Team 3
-// Engineer: 	ksandesh
+// Engineer: 	ksandesh chandana
 // 
 // Create Date:		Sept 14, 2014  
 // Design Name: 	Baud Rate Generator
@@ -86,6 +86,14 @@ module brg(
 		end
 	end
 	*/
+	// Count values to be loaded to TX counter and RX counter
+	always@(*)
+	begin
+		tx_clk_period = {DBH[3:0], DBL[7:0],{4{1'b0}}};
+		rx_clk_period = {DBH, DBL};
+	end
+	
+	// TX counter
 	always@(posedge clk, posedge rst) 
 	begin
 		if(rst) 
@@ -104,13 +112,7 @@ module brg(
 			end
 	end
 	
-	always@(*)
-	begin
-	tx_clk_period = {DBH,DBL};
-	rx_clk_period = {{4{1'b0}},DBH,DBL[7:4]};
-	end
-	
-	
+	// RX counter
 	always@(posedge clk, posedge rst) 
 	begin
 		if(rst) 
@@ -129,8 +131,8 @@ module brg(
 			end
 	end
 	
-	assign tx_enable = (counter_tx == tx_clk_period);
-	assign rx_enable = (counter_rx == rx_clk_period);
+	assign tx_enable = (counter_tx == tx_clk_period)? 1: 0;
+	assign rx_enable = (counter_rx == rx_clk_period)? 1: 0;
 	
 endmodule
 
