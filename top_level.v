@@ -23,7 +23,15 @@ module top_level(
     input rst,         // Asynchronous reset, tied to dip switch 0
     output txd,        // RS232 Transmit Data
     input rxd,         // RS232 Recieve Data
-    input [1:0] br_cfg // Baud Rate Configuration, Tied to dip switches 2 and 3
+    input [1:0] br_cfg, // Baud Rate Configuration, Tied to dip switches 2 and 3
+	 output GPIO_LED_0,
+	 output GPIO_LED_1,
+	 output GPIO_LED_2,
+	 output GPIO_LED_3,
+	 output GPIO_LED_4,
+	 output GPIO_LED_5,
+	 output GPIO_LED_6,
+	 output GPIO_LED_7
     );
 	
 	wire iocs;
@@ -55,8 +63,16 @@ module top_level(
 						 .rda(rda),
 						 .tbr(tbr),
 						 .ioaddr(ioaddr),
-						 .databus(databus)
-					 );
+						 .databus(databus),
+						 .GPIO_LED_0(GPIO_LED_0),
+						 .GPIO_LED_1(GPIO_LED_1),
+							.GPIO_LED_2(GPIO_LED_2),
+							.GPIO_LED_3(GPIO_LED_3),
+							.GPIO_LED_4(GPIO_LED_4),
+							.GPIO_LED_5(GPIO_LED_5),
+							.GPIO_LED_6(GPIO_LED_6),
+							.GPIO_LED_7(GPIO_LED_7)
+					 );   
 					 
 endmodule
 
