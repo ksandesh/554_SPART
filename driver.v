@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 //////////////////////////////////////////////////////////////////////////////////
 // Company: 		Team 3
 // Engineer:		Sandesh
@@ -68,7 +69,7 @@ module driver(
 	always@(posedge clk) begin
 		if(rst)
 			data_buffer <= 8'bxxxxxxxx;
-		else if ((iocs == 1) && (iorw == 1) && (rda == 1)) // Sandesh: Added additional condition to ....
+		else if ((iocs == 1) && (iorw == 1) && (state == READ)) // Sandesh: Added additional condition to ....
 			data_buffer <= databus;
 	end
 		
